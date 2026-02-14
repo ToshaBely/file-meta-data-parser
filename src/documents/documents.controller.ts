@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { NotImplementedException } from '@nestjs/common/exceptions/not-implemented.exception';
 
+import { RequiredResourcePermissions } from '../common/decorators/required-resource-permissions.decorator';
 import { AuthGuard } from '../common/guards/auth.guard';
 
 @Controller('documents')
@@ -16,11 +17,13 @@ export class DocumentsController {
   constructor() {}
 
   @Get('')
+  @RequiredResourcePermissions(['documents:read'])
   getAllDocuments() {
     throw new NotImplementedException();
   }
 
   @Get(':uuid')
+  @RequiredResourcePermissions(['documents:read'])
   getDocumentById(
     @Param('uuid', new ParseUUIDPipe({ version: '4' })) id: string,
   ) {
@@ -29,6 +32,7 @@ export class DocumentsController {
   }
 
   @Post('metadata\\:parse')
+  @RequiredResourcePermissions(['documents:admin'])
   createDocument() {
     throw new NotImplementedException();
   }
