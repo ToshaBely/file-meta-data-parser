@@ -10,9 +10,11 @@ import { NotImplementedException } from '@nestjs/common/exceptions/not-implement
 
 import { RequiredResourcePermissions } from '../common/decorators/required-resource-permissions.decorator';
 import { AuthGuard } from '../common/guards/auth.guard';
+import { RequiredResourcePermissionsGuard } from '../common/guards/required-resource-permissions.guard';
 
 @Controller('documents')
 @UseGuards(AuthGuard)
+@UseGuards(RequiredResourcePermissionsGuard)
 export class DocumentsController {
   constructor() {}
 
