@@ -1,7 +1,17 @@
-import { Controller, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { NotImplementedException } from '@nestjs/common/exceptions/not-implemented.exception';
 
+import { AuthGuard } from '../common/guards/auth.guard';
+
 @Controller('documents')
+@UseGuards(AuthGuard)
 export class DocumentsController {
   constructor() {}
 
