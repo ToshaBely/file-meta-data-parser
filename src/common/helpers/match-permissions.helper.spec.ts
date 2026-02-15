@@ -1,4 +1,4 @@
-import { matchPermissions } from './match-permissions';
+import { matchPermissions } from './match-permissions.helper';
 import type { ResourcePermission } from '../types/resource-permission.types';
 
 describe('matchPermissions helper', () => {

@@ -4,7 +4,7 @@ import { Request } from 'express';
 import { Observable } from 'rxjs';
 
 import { RequiredResourcePermissions } from '../decorators/required-resource-permissions.decorator';
-import { matchPermissions } from '../helpers/match-permissions';
+import { matchPermissions } from '../helpers/match-permissions.helper';
 
 const FAKE_RESOURCE_PERMISSIONS_HEADER = 'x-resource-permissions';
 
