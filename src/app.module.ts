@@ -1,15 +1,22 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+import { getDotEnvConfigFilePath } from './common/helpers/get-dot-env-config-file-path';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
-
 import { ConsoleLoggerModule } from './console-logger/console-logger.module';
 import { DocumentsModule } from './documents/documents.module';
 
 @Module({
-  imports: [ConsoleLoggerModule, DocumentsModule],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: getDotEnvConfigFilePath(),
+    }),
+    ConsoleLoggerModule,
+    DocumentsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
