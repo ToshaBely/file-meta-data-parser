@@ -1,8 +1,8 @@
-import type { ResourcePermission } from '../types/resource-permission';
+import type { ResourcePermission } from '../types/resource-permission.types';
 import {
   isResourcePermission,
   VERBOSE_RESOURCE_PERMISSIONS_MAP,
-} from '../types/resource-permission';
+} from '../types/resource-permission.types';
 
 export function matchPermissions(
   requiredResourcePermissions: ResourcePermission[],

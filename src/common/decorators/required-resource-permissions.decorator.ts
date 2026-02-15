@@ -1,6 +1,6 @@
 import { Reflector } from '@nestjs/core';
 
-import { ResourcePermission } from '../types/resource-permission';
+import type { ResourcePermission } from '../types/resource-permission.types';
 
 export const RequiredResourcePermissions =
   Reflector.createDecorator<ResourcePermission[]>();

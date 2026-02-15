@@ -1,5 +1,5 @@
 import { matchPermissions } from './match-permissions';
-import type { ResourcePermission } from '../types/resource-permission';
+import type { ResourcePermission } from '../types/resource-permission.types';
 
 describe('matchPermissions helper', () => {
   describe('argument validation', () => {
