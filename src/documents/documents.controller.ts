@@ -20,12 +20,13 @@ import { AuthGuard } from '../common/guards/auth.guard';
 import { RequiredResourcePermissionsGuard } from '../common/guards/required-resource-permissions.guard';
 
 import { MAX_EXPECTED_CASE_LAW_FILE_SIZE } from '../common/constants/files.constants';
+import { DocumentsService } from './documents.service';
 
 @Controller('documents')
 @UseGuards(AuthGuard)
 @UseGuards(RequiredResourcePermissionsGuard)
 export class DocumentsController {
-  constructor() {}
+  constructor(private readonly documentsService: DocumentsService) {}
 
   @Get('')
   @RequiredResourcePermissions(['documents:read'])
@@ -64,7 +65,8 @@ export class DocumentsController {
     )
     file: Express.Multer.File,
   ) {
-    console.log('[parseDocumentMetadata] check file:', file);
-    throw new NotImplementedException();
+    // first step is to distill the text content from the file
+    // it's going to be used in future steps
+    return this.documentsService.getFileTextContent(file);
   }
 }
