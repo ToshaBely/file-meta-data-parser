@@ -17,6 +17,8 @@ import { RequiredResourcePermissions } from '../common/decorators/required-resou
 import { AuthGuard } from '../common/guards/auth.guard';
 import { RequiredResourcePermissionsGuard } from '../common/guards/required-resource-permissions.guard';
 
+import { OpenAiService } from '../open-ai/open-ai.service';
+
 import { DocumentsService } from './documents.service';
 
 import { parseDocumentMetadataFileValidators } from './utils/parse-document-metadata-file-validators';
@@ -25,7 +27,10 @@ import { parseDocumentMetadataFileValidators } from './utils/parse-document-meta
 @UseGuards(AuthGuard)
 @UseGuards(RequiredResourcePermissionsGuard)
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly openAiService: OpenAiService,
+  ) {}
 
   @Get('')
   @RequiredResourcePermissions(['documents:read'])
@@ -45,14 +50,14 @@ export class DocumentsController {
   @Post('metadata\\:parse')
   @UseInterceptors(FileInterceptor('file'))
   @RequiredResourcePermissions(['documents:admin'])
-  parseDocumentMetadata(
+  async parseDocumentMetadata(
     @UploadedFile(
       new ParseFilePipe({ validators: parseDocumentMetadataFileValidators }),
     )
     file: Express.Multer.File,
   ) {
-    // first step is to distill the text content from the file
-    // it's going to be used in future steps
-    return this.documentsService.getFileTextContent(file);
+    const fileTextContent =
+      await this.documentsService.getFileTextContent(file);
+    return await this.openAiService.parseLawCaseFileMetadata(fileTextContent);
   }
 }
