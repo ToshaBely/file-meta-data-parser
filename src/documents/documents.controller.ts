@@ -9,7 +9,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { NotImplementedException } from '@nestjs/common/exceptions/not-implemented.exception';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import { RequiredResourcePermissions } from '../common/decorators/required-resource-permissions.decorator';
@@ -35,16 +34,15 @@ export class DocumentsController {
   @Get('')
   @RequiredResourcePermissions(['documents:read'])
   getAllDocuments() {
-    throw new NotImplementedException();
+    return this.documentsService.getAllDocumentsMetaData();
   }
 
   @Get(':uuid')
   @RequiredResourcePermissions(['documents:read'])
   getDocumentById(
-    @Param('uuid', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('uuid', new ParseUUIDPipe({ version: '4' })) uuid: string,
   ) {
-    console.log('[getDocumentById]', id);
-    throw new NotImplementedException();
+    return this.documentsService.getDocumentMetaDataById(uuid);
   }
 
   @Post('metadata\\:parse')

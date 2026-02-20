@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -13,6 +14,21 @@ import { DocumentsModule } from './documents/documents.module';
   imports: [
     ConfigModule.forRoot({
       envFilePath: getDotEnvConfigFilePath(),
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('DATABASE_HOST'),
+        port: Number(configService.get('DATABASE_PORT')),
+        username: configService.get('DATABASE_USERNAME'),
+        password: configService.get('DATABASE_PASSWORD'),
+        database: configService.get('DATABASE_NAME'),
+        autoLoadEntities: true,
+        // "synchronize" is used to create / update table(s) - don't use it in production
+        // synchronize: true,
+      }),
     }),
     ConsoleLoggerModule,
     DocumentsModule,

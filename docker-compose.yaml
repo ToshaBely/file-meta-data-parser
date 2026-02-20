@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: file_meta_data_parser
+      POSTGRES_USER: "anton"
+      POSTGRES_PASSWORD: "pandektes"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    # set shared memory limit when using docker-compose
+    shm_size: 128mb
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  pgdata:
