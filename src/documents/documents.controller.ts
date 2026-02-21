@@ -56,6 +56,12 @@ export class DocumentsController {
   ) {
     const fileTextContent =
       await this.documentsService.getFileTextContent(file);
-    return await this.openAiService.parseLawCaseFileMetadata(fileTextContent);
+
+    const documentMetadataValues =
+      await this.openAiService.parseLawCaseFileMetadata(fileTextContent);
+
+    await this.documentsService.insertDocumentMetaData(documentMetadataValues);
+
+    return documentMetadataValues;
   }
 }

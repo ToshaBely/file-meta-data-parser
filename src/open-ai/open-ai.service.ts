@@ -4,7 +4,10 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 
 import type { DocumentMetadataValues } from '../common/types/document-metadata-values.types';
-import { documentMetadataValuesSchema } from '../common/types/document-metadata-values.types';
+import {
+  documentMetadataParsedValuesSchema,
+  translateDocumentMetadataParsedValues,
+} from '../common/types/document-metadata-values.types';
 
 import { ConsoleLoggerService } from '../console-logger/console-logger.service';
 
@@ -83,11 +86,11 @@ export class OpenAiService {
       }
 
       // idea: separately we might check for "null" values and send a notification (warn) in the team monitoring services
-      const documentMetaDataResponse = documentMetadataValuesSchema.parse(
+      const documentMetaDataResponse = documentMetadataParsedValuesSchema.parse(
         JSON.parse(response.output_text),
       );
 
-      return documentMetaDataResponse;
+      return translateDocumentMetadataParsedValues(documentMetaDataResponse);
     } catch (error) {
       if (error instanceof OpenAI.APIError) {
         // in a real case scenario we could target some specific error(s), e.g. 429 (RateLimitError)

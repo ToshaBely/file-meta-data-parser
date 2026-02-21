@@ -7,6 +7,8 @@ import {
   MIMETYPE_HTML,
   MIMETYPE_PDF,
 } from '../common/constants/files.constants';
+import type { DocumentMetadataValues } from '../common/types/document-metadata-values.types';
+
 import { DocumentMetaData } from './entities/document-meta-data.entity';
 
 @Injectable()
@@ -15,6 +17,19 @@ export class DocumentsService {
     @InjectRepository(DocumentMetaData)
     private readonly documentMetaDataRepository: Repository<DocumentMetaData>,
   ) {}
+
+  async insertDocumentMetaData(documentMetadataValues: DocumentMetadataValues) {
+    await this.documentMetaDataRepository.insert({
+      title: documentMetadataValues.title,
+      decisionType: documentMetadataValues.decisionType,
+      dateOfDecision: documentMetadataValues.dateOfDecision,
+      office: documentMetadataValues.office,
+      court: documentMetadataValues.court,
+      caseNumber: documentMetadataValues.caseNumber,
+      summaryCase: documentMetadataValues.summaryCase,
+      summaryConclusion: documentMetadataValues.summaryConclusion,
+    });
+  }
 
   async getAllDocumentsMetaData(): Promise<DocumentMetaData[]> {
     return this.documentMetaDataRepository.find();
