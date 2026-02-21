@@ -54,7 +54,7 @@ export const PARSE_FILE_METADATA_PROMPT_JSON_SCHEMA: OpenAI.Responses.ResponseFo
           type: ['string', 'null'],
           pattern: '^\\d{4}-\\d{2}-\\d{2}$',
           description:
-            'The date of decision follows a common date pattern YYYY-MM-DD',
+            'The date of decision follows a common date pattern YYYY-MM-DD (ISO date format)',
         },
         office: { type: ['string', 'null'] },
         court: { type: ['string', 'null'] },

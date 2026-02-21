@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
+import { z } from 'zod';
+
+import type { DocumentMetadataValues } from '../common/types/document-metadata-values.types';
+import { documentMetadataValuesSchema } from '../common/types/document-metadata-values.types';
 
 import { ConsoleLoggerService } from '../console-logger/console-logger.service';
 
@@ -25,7 +29,9 @@ export class OpenAiService {
     });
   }
 
-  async parseLawCaseFileMetadata(fileTextContent: string): Promise<string> {
+  async parseLawCaseFileMetadata(
+    fileTextContent: string,
+  ): Promise<DocumentMetadataValues> {
     try {
       const response = await this.openAiClient.responses.create({
         // usually it's better to "pin" a specific model snapshot to have more consistent results with the same input
@@ -52,7 +58,7 @@ export class OpenAiService {
               },
             ],
           },
-          // todo: it would be nice to add a "security" instruction to stop the execution if the model can see
+          // todo: it would be nice to add a "security instruction" to stop the execution if the model can see
           //  any attempt of manipulation (such as "forget all the previous instructions and do X")
           {
             role: 'user',
@@ -76,15 +82,23 @@ export class OpenAiService {
         throw new Error('OpenAI response status is not "completed"');
       }
 
-      // todo: check the response schema (via zod)
-      // todo: separately might check for "null" values and trigger a warn / notification in the team services
-      return response.output_text;
+      // idea: separately we might check for "null" values and send a notification (warn) in the team monitoring services
+      const documentMetaDataResponse = documentMetadataValuesSchema.parse(
+        JSON.parse(response.output_text),
+      );
+
+      return documentMetaDataResponse;
     } catch (error) {
       if (error instanceof OpenAI.APIError) {
         // in a real case scenario we could target some specific error(s), e.g. 429 (RateLimitError)
         this.loggerService.warn(
           `[parseLawCaseFileMetadata] OpenAI API Error: request_id="${error.requestID}", status="${error.status} (${error.name})`,
         );
+      }
+
+      if (error instanceof z.ZodError) {
+        // notify the team that our prompt needs some love,
+        // because it returns not a parsable JSON as it was expected
       }
 
       throw error;
