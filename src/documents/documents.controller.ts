@@ -1,6 +1,9 @@
 import {
+  Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseFilePipe,
   ParseUUIDPipe,
@@ -8,6 +11,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  UsePipes,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -15,11 +19,16 @@ import { RequiredResourcePermissions } from '../common/decorators/required-resou
 
 import { AuthGuard } from '../common/guards/auth.guard';
 import { RequiredResourcePermissionsGuard } from '../common/guards/required-resource-permissions.guard';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 
 import { OpenAiService } from '../open-ai/open-ai.service';
 
 import { DocumentsService } from './documents.service';
-
+import type {
+  SearchDocumentsInputDto,
+  SearchDocumentsResponseDto,
+} from './dto/search-documents.dto';
+import { searchDocumentsInputDtoSchema } from './dto/search-documents.dto';
 import { parseDocumentMetadataFileValidators } from './utils/parse-document-metadata-file-validators';
 
 @Controller('documents')
@@ -43,6 +52,18 @@ export class DocumentsController {
     @Param('uuid', new ParseUUIDPipe({ version: '4' })) uuid: string,
   ) {
     return this.documentsService.getDocumentMetaDataById(uuid);
+  }
+
+  @Post('metadata\\:search')
+  @HttpCode(HttpStatus.OK)
+  @RequiredResourcePermissions(['documents:read'])
+  @UsePipes(new ZodValidationPipe(searchDocumentsInputDtoSchema))
+  searchDocuments(
+    @Body() searchDocumentsInputDto: SearchDocumentsInputDto,
+  ): Promise<SearchDocumentsResponseDto> {
+    return this.documentsService.getDocumentMetaDataByFilter(
+      searchDocumentsInputDto,
+    );
   }
 
   @Post('metadata\\:parse')
