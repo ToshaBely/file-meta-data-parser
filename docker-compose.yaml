@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres
+    container_name: postgres_db
     restart: always
     ports:
       - 5432:5432
@@ -12,12 +13,40 @@ services:
       - pgdata:/var/lib/postgresql
     # set shared memory limit when using docker-compose
     shm_size: 128mb
+    networks:
+      - app-network
+    profiles:
+      - database
 
   adminer:
     image: adminer
     restart: always
     ports:
       - 8080:8080
+    profiles:
+      - database-debug
+    networks:
+      - app-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodejs_app
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - app-network
+    depends_on:
+      - db
+    profiles:
+      - backend
 
 volumes:
   pgdata:
+
+# Custom network for service communication
+networks:
+  app-network:
+    driver: bridge
