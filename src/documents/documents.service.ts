@@ -23,8 +23,8 @@ import { appendOrderByClause } from './utils/append-order-by-clause.helper';
 
 const DOCUMENT_META_DATA_ALIAS = 'documentMetaData';
 
-const DEFAULT_SORTING_KEY: DocumentMetaDataSortableKey = 'createdAt';
-const DEFAULT_SORTING_ORDER: SortingOrderType = 'DESC';
+const DEFAULT_SORTING_KEY: DocumentMetaDataSortableKey = 'title';
+const DEFAULT_SORTING_ORDER: SortingOrderType = 'ASC';
 
 @Injectable()
 export class DocumentsService {
@@ -44,10 +44,6 @@ export class DocumentsService {
       summaryCase: documentMetadataValues.summaryCase,
       summaryConclusion: documentMetadataValues.summaryConclusion,
     });
-  }
-
-  async getAllDocumentsMetaData(): Promise<DocumentMetaData[]> {
-    return this.documentMetaDataRepository.find();
   }
 
   async getDocumentMetaDataById(uuid: string): Promise<DocumentMetaData> {

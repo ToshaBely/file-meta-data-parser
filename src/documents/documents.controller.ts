@@ -40,12 +40,6 @@ export class DocumentsController {
     private readonly openAiService: OpenAiService,
   ) {}
 
-  @Get('')
-  @RequiredResourcePermissions(['documents:read'])
-  getAllDocuments() {
-    return this.documentsService.getAllDocumentsMetaData();
-  }
-
   @Get(':uuid')
   @RequiredResourcePermissions(['documents:read'])
   getDocumentById(
