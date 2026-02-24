@@ -1,38 +1,102 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# File meta data parser
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> Thoughts and notes about the decisions made, tradeoffs, and future plans can be found in [thoughts-and-notes.md](readme/thoughts-and-notes.md)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Project structure
+
+![img.png](readme/images/project-structure.png)
+[Excalidraw link](https://excalidraw.com/#json=jV3kgAwSY17iwIMILDH-d,-kDURXd4XBzEYKQO8TUuXA)
+
+### Note
+
+Please, check the **Project structure** suggestions section out in the [Thoughts and notes](readme/thoughts-and-notes.md) doc to
+learn more about future potential improvements.
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is an application which can parse metadata from an HTML or PDF document about a given case law.
+
+The metadata contains the following data:
+
+```typescript
+class DocumentMetaDataResponseDto {
+  readonly id: string;
+  readonly title: string | null;
+  readonly decisionType: string | null;
+  readonly dateOfDecision: string | null; // ISO date (YYYY-MM-DD)
+  readonly office: string | null;
+  readonly court: string | null;
+  readonly caseNumber: string | null;
+  readonly summaryCase: string | null;
+  readonly summaryConclusion: string | null;
+}
+```
+
+### Service API
+
+1. `GET` `/documents/{document-uuid}`:
+    - endpoint to retrieve a specific case law resource (e.g., by ID or some identifiable field);
+2. `POST` `/documents/metadata:parse`:
+    - endpoint that accepts the file, extracts data from the file, and persist to a local database;
+    - accepts a file inside the request body (`form-data`);
+3. `POST` `/documents/metadata:search`:
+    - reach search endpoint which returns a paginated response according to the filters provided;
+    - the filters should be provided in the request body (`json`) following the next format (all the fields are
+      optional):
+
+```typescript
+type SearchDocumentsInputDto = {
+  documentMetaDataIds?: string[]; // a list of UUIDv4
+  caseNumbers?: string[];
+  titleSearchString?: string;
+  courtOrOfficeSearchString?: string;
+  decisionType?: string;
+  decisionMadeAtOrBefore?: string; // ISO date (YYYY-MM-DD)
+  decisionMadeAtOrAfter?: string; // ISO date (YYYY-MM-DD)
+  sortingKeys?: string[]; // the keys to sort the results by
+  sortingOrder?: Array<'ASC' | 'DESC'>; // the order to sort the results by. Must be the same length as [sortingKeys]: one order per key
+
+  // offset pagination params
+  offset?: number;
+  limit?: number;
+}
+```
+
+### (Fake) security
+
+In order to start "securing" the data, 2 mechanism were created - `X-Resource-Permissions` header with the user's
+resource permissions as well an `Authorisation` header.
+Every request should have:
+
+1. `Authorisation` header with an arbitrary Bearer token (the fake method checks whether we have any value provided);
+2. `X-Resource-Permissions` header which must be `documents:admin` for `:parse` operation and at least `documents:read`
+   for all the query operations;
 
 ## Project setup
 
+### Install dependencies
 ```bash
 $ pnpm install
 ```
 
-## Compile and run the project
+### Set up OpenAI API key
+Before the project is ready to parse the document metadata, an OpenAI API key (`OPENAI_API_KEY` field) must be provided to the `.env.<env_type>` file(s):
+- [.env.production](/config/.env.production) - the server app uses it by default while running inside Docker;
+- [.env.development](/config/.env.development) - the server app uses it by default while running locally;
 
+(don't forget to top up your OpenAI account before you can start using any model)
+
+More info in [OpenAI developer quickstart doc](https://developers.openai.com/api/docs/quickstart).
+
+
+### Compile and run the project locally
+
+#### Start the database Docker container
+```bash
+$ pnpm start:docker:db
+```
+
+#### Run the server app
 ```bash
 # development
 $ pnpm run start
@@ -44,55 +108,17 @@ $ pnpm run start:dev
 $ pnpm run start:prod
 ```
 
-## Run tests
+The app is available at `http://localhost:3001/` for development env and at `http://localhost:3000/` for production env. 
+
+
+### Compile and run the project locally
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+$ pnpm start:docker # Start the database together with the server app in Docker
 ```
 
-## Deployment
+The app is available at `http://localhost:3000/`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## NestJS
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+You may find the original NestJS README file in [readme/nest-original-readme.md](readme/nestjs-original-readme.md)
