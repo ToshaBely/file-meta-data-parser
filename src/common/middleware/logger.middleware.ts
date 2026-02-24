@@ -10,7 +10,9 @@ export class LoggerMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     // todo: later we can introduce more sophisticated logging / observability system
     //  e.g. to write logs to the DB or to the Observability tool(s) + provide a custom context, not just arguments
-    this.loggerService.info(`Start request: [${req.method}] "${req.url}"`);
+    this.loggerService.info(
+      `Start request: [${req.method}] "${req.originalUrl}"`,
+    );
     next();
   }
 }
