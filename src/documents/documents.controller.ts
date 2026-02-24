@@ -79,4 +79,14 @@ export class DocumentsController {
 
     return documentMetadataValues;
   }
+
+  @Post('metadata\\:generate')
+  async generateAndSaveDocumentsMetadata() {
+    const generatedRecords =
+      await this.openAiService.generateDocumentsMetadata(2);
+
+    await this.documentsService.insertDocumentMetaData(generatedRecords);
+
+    return generatedRecords;
+  }
 }

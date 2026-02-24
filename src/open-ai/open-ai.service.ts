@@ -16,8 +16,15 @@ import {
   PARSE_FILE_METADATA_PROMPT_JSON_SCHEMA,
   PARSE_FILE_METADATA_USER_PROMPT,
 } from './prompts/parse-file-metadata-instruction.prompt';
+import {
+  GENERATE_FILE_METADATA_ENTITIES_INSTRUCTION_PROMPT,
+  GENERATE_FILE_METADATA_ENTITIES_PROMPT_JSON_SCHEMA,
+} from './prompts/generate-file-metadata-entities-instruction.prompt';
 
 const OPENAI_API_KEY_ENV_VAR_NAME = 'OPENAI_API_KEY';
+
+// usually it's better to "pin" a specific model snapshot to have more consistent results with the same input
+const OPEN_AI_MODEL: OpenAI.ResponsesModel = 'gpt-4.1-mini-2025-04-14';
 
 @Injectable()
 export class OpenAiService {
@@ -37,8 +44,7 @@ export class OpenAiService {
   ): Promise<DocumentMetadataValues> {
     try {
       const response = await this.openAiClient.responses.create({
-        // usually it's better to "pin" a specific model snapshot to have more consistent results with the same input
-        model: 'gpt-4.1-mini-2025-04-14',
+        model: OPEN_AI_MODEL,
         // lower temperature makes the model less creative and more doc based:
         // 0 - minimises creative inference; 0.1-0.3 - for analytical tasks
         temperature: 0.1,
@@ -102,6 +108,90 @@ export class OpenAiService {
       if (error instanceof z.ZodError) {
         // notify the team that our prompt needs some love,
         // because it returns not a parsable JSON as it was expected
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Internal procedure
+   */
+  async generateDocumentsMetadata(
+    numberOfRecords: number,
+  ): Promise<DocumentMetadataValues[]> {
+    try {
+      const response = await this.openAiClient.responses.create({
+        // usually it's better to "pin" a specific model snapshot to have more consistent results with the same input
+        model: OPEN_AI_MODEL,
+        // lower temperature makes the model less creative and more doc based:
+        // 0 - minimises creative inference; 0.1-0.3 - for analytical tasks
+        temperature: 0.1,
+        input: [
+          {
+            role: 'system',
+            content: [
+              {
+                type: 'input_text',
+                text: GENERATE_FILE_METADATA_ENTITIES_INSTRUCTION_PROMPT,
+              },
+            ],
+          },
+          {
+            role: 'system',
+            content: [
+              {
+                type: 'input_text',
+                text: PARSE_FILE_METADATA_INSTRUCTION_PROMPT,
+              },
+            ],
+          },
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'input_text',
+                text: `Generate ${numberOfRecords} document metadata records`,
+              },
+            ],
+          },
+        ],
+        text: { format: GENERATE_FILE_METADATA_ENTITIES_PROMPT_JSON_SCHEMA },
+      });
+
+      if (response.status !== 'completed') {
+        throw new Error('OpenAI response status is not "completed"');
+      }
+
+      console.log('check response.usage', response.usage);
+      console.log('check response.output_text', response.output_text);
+
+      const documentMetaDataListResponse: unknown = JSON.parse(
+        response.output_text,
+      );
+
+      if (
+        typeof documentMetaDataListResponse === 'object' &&
+        documentMetaDataListResponse &&
+        'recordList' in documentMetaDataListResponse
+      ) {
+        return Array.isArray(documentMetaDataListResponse.recordList)
+          ? documentMetaDataListResponse.recordList.map((documentMeta) =>
+              translateDocumentMetadataParsedValues(
+                documentMetadataParsedValuesSchema.parse(documentMeta),
+              ),
+            )
+          : [];
+      }
+
+      return [];
+    } catch (error) {
+      // todo: handle the error gracefully
+      if (error instanceof OpenAI.APIError) {
+        // in a real case scenario we could target some specific error(s), e.g. 429 (RateLimitError)
+        this.loggerService.warn(
+          `[parseLawCaseFileMetadata] OpenAI API Error: request_id="${error.requestID}", status="${error.status} (${error.name})`,
+        );
       }
 
       throw error;

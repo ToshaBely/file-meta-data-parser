@@ -33,17 +33,34 @@ export class DocumentsService {
     private readonly documentMetaDataRepository: Repository<DocumentMetaData>,
   ) {}
 
-  async insertDocumentMetaData(documentMetadataValues: DocumentMetadataValues) {
-    await this.documentMetaDataRepository.insert({
-      title: documentMetadataValues.title,
-      decisionType: documentMetadataValues.decisionType,
-      dateOfDecision: documentMetadataValues.dateOfDecision,
-      office: documentMetadataValues.office,
-      court: documentMetadataValues.court,
-      caseNumber: documentMetadataValues.caseNumber,
-      summaryCase: documentMetadataValues.summaryCase,
-      summaryConclusion: documentMetadataValues.summaryConclusion,
-    });
+  async insertDocumentMetaData(
+    documentMetadataValues: DocumentMetadataValues | DocumentMetadataValues[],
+  ) {
+    if (Array.isArray(documentMetadataValues)) {
+      await this.documentMetaDataRepository.insert(
+        documentMetadataValues.map((documentMetadataItem) => ({
+          title: documentMetadataItem.title,
+          decisionType: documentMetadataItem.decisionType,
+          dateOfDecision: documentMetadataItem.dateOfDecision,
+          office: documentMetadataItem.office,
+          court: documentMetadataItem.court,
+          caseNumber: documentMetadataItem.caseNumber,
+          summaryCase: documentMetadataItem.summaryCase,
+          summaryConclusion: documentMetadataItem.summaryConclusion,
+        })),
+      );
+    } else {
+      await this.documentMetaDataRepository.insert({
+        title: documentMetadataValues.title,
+        decisionType: documentMetadataValues.decisionType,
+        dateOfDecision: documentMetadataValues.dateOfDecision,
+        office: documentMetadataValues.office,
+        court: documentMetadataValues.court,
+        caseNumber: documentMetadataValues.caseNumber,
+        summaryCase: documentMetadataValues.summaryCase,
+        summaryConclusion: documentMetadataValues.summaryConclusion,
+      });
+    }
   }
 
   async getDocumentMetaDataById(uuid: string): Promise<DocumentMetaData> {
