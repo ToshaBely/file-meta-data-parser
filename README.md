@@ -111,7 +111,7 @@ $ pnpm run start:prod
 The app is available at `http://localhost:3001/` for development env and at `http://localhost:3000/` for production env. 
 
 
-### Compile and run the project locally
+### Compile and run the project in Docker
 
 ```bash
 $ pnpm start:docker # Start the database together with the server app in Docker
